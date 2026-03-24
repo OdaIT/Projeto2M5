@@ -19,8 +19,12 @@ const getAllTasks = async (sort, search) => {
 
 const getTaskStats = async () => {
   const [[{ total }]] = await pool.query("SELECT COUNT(*) AS total FROM tasks");
-  const [[{ done }]] = await pool.query("SELECT COUNT(*) AS done FROM tasks WHERE done = 1");
-  const [[{ pending }]] = await pool.query("SELECT COUNT(*) AS pending FROM tasks WHERE done = 0");
+  const [[{ done }]] = await pool.query(
+    "SELECT COUNT(*) AS done FROM tasks WHERE done = 1",
+  );
+  const [[{ pending }]] = await pool.query(
+    "SELECT COUNT(*) AS pending FROM tasks WHERE done = 0",
+  );
   return { total, done, pending };
 };
 
@@ -31,19 +35,31 @@ const getTaskById = async (id) => {
 };
 
 const postTask = async (body) => {
-  if (!body.title || typeof body.title !== "string" || body.title.trim() === "") {
+  if (
+    !body.title || typeof body.title !== "string" || body.title.trim() === ""
+  ) {
     throw new Error("Task title required or invalid");
   }
-  const [result] = await pool.query("INSERT INTO tasks (title, done) VALUES (?, ?)", [body.title.trim(), false]);
+  const [result] = await pool.query(
+    "INSERT INTO tasks (title, done) VALUES (?, ?)",
+    [body.title.trim(), false],
+  );
   return { id: result.insertId, title: body.title.trim(), done: false };
 };
 
 const putTask = async (taskIdParam, body) => {
-  if (!body.title || typeof body.title !== "string" || body.title.trim() === "") {
+  if (
+    !body.title ||
+    typeof body.title !== "string" ||
+    body.title.trim() === ""
+  ) {
     throw new Error("Task title required or invalid");
   }
   const task = await getTaskById(taskIdParam);
-  await pool.query("UPDATE tasks SET title = ? WHERE id = ?", [body.title.trim(), taskIdParam]);
+  await pool.query("UPDATE tasks SET title = ? WHERE id = ?", [
+    body.title.trim(),
+    taskIdParam,
+  ]);
   return { ...task, title: body.title.trim() };
 };
 
@@ -57,19 +73,22 @@ const deleteTask = async (taskIdParam) => {
 
 const patchDone = async (taskIdParam, done) => {
   const task = await getTaskById(taskIdParam);
-  await pool.query("UPDATE tasks SET done = ? WHERE id = ?", [done, taskIdParam]);
+  await pool.query("UPDATE tasks SET done = ? WHERE id = ?", [
+    done,
+    taskIdParam,
+  ]);
   return { ...task, done };
 };
 
 const addTaskTag = async (taskIdAdd, tagIdAdd) => {
   const [existing] = await pool.query(
     "SELECT * FROM task_tags WHERE taskId = ? AND tagId = ?",
-    [taskIdAdd, tagIdAdd]
+    [taskIdAdd, tagIdAdd],
   );
   if (existing.length > 0) return null;
   const [result] = await pool.query(
     "INSERT INTO task_tags (taskId, tagId) VALUES (?, ?)",
-    [taskIdAdd, tagIdAdd]
+    [taskIdAdd, tagIdAdd],
   );
   return { id: result.insertId, taskId: taskIdAdd, tagId: tagIdAdd };
 };
@@ -77,7 +96,7 @@ const addTaskTag = async (taskIdAdd, tagIdAdd) => {
 const getTagsByTaskId = async (taskId) => {
   const [rows] = await pool.query(
     "SELECT tagId FROM task_tags WHERE taskId = ?",
-    [taskId]
+    [taskId],
   );
   return rows.map((r) => r.tagId);
 };
@@ -89,7 +108,7 @@ const removeTaskTagsByTagId = async (tagId) => {
 const getTasksByTagId = async (tagId) => {
   const [rows] = await pool.query(
     "SELECT t.* FROM tasks t JOIN task_tags tt ON t.id = tt.taskId WHERE tt.tagId = ?",
-    [tagId]
+    [tagId],
   );
   return rows;
 };

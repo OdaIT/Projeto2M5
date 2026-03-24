@@ -12,13 +12,12 @@ const postComment = async (taskId, body) => {
     throw new Error("Content is required");
   }
 
-  const now = new Date().toISOString();
   const [result] = await pool.query(
-    "INSERT INTO comments (taskId, userId, content, createdAt, lastAlteredAt) VALUES (?, ?, ?, ?, ?)",
-    [parsedTaskId, body.userId, body.content.trim(), now, now]
+    "INSERT INTO comments (taskId, userId, content) VALUES (?, ?, ?)",
+    [parsedTaskId, body.userId, body.content.trim()]
   );
 
-  return { id: result.insertId, taskId: parsedTaskId, userId: body.userId, content: body.content.trim(), createdAt: now, lastAlteredAt: now };
+  return { id: result.insertId, taskId: parsedTaskId, userId: body.userId, content: body.content.trim() };
 };
 
 const getCommentsByTaskId = async (taskId, order) => {
@@ -41,12 +40,11 @@ const putComment = async (commentId, body) => {
     throw new Error("Content is required");
   }
 
-  const now = new Date().toISOString();
   await pool.query(
-    "UPDATE comments SET content = ?, lastAlteredAt = ? WHERE id = ?",
-    [body.content.trim(), now, commentId]
+    "UPDATE comments SET content = ? WHERE id = ?",
+    [body.content.trim(), commentId]
   );
-  return { ...rows[0], content: body.content.trim(), lastAlteredAt: now };
+  return { ...rows[0], content: body.content.trim() };
 };
 
 const deleteComment = async (commentId) => {

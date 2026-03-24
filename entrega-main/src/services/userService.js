@@ -19,14 +19,21 @@ const getAllUsers = async (sort, search) => {
 
 const getUserStats = async () => {
   const [[{ total }]] = await pool.query("SELECT COUNT(*) AS total FROM users");
-  const [[{ active }]] = await pool.query("SELECT COUNT(*) AS active FROM users WHERE status = 1");
-  const [[{ inactive }]] = await pool.query("SELECT COUNT(*) AS inactive FROM users WHERE status = 0");
+  const [[{ active }]] = await pool.query(
+    "SELECT COUNT(*) AS active FROM users WHERE status = 1",
+  );
+  const [[{ inactive }]] = await pool.query(
+    "SELECT COUNT(*) AS inactive FROM users WHERE status = 0",
+  );
   return { total, active, inactive };
 };
 
 const patchUserStatus = async (userId, status) => {
   const user = await getUserById(userId);
-  await pool.query("UPDATE users SET status = ? WHERE id = ?", [status, userId]);
+  await pool.query("UPDATE users SET status = ? WHERE id = ?", [
+    status,
+    userId,
+  ]);
   return { ...user, status };
 };
 
@@ -39,7 +46,7 @@ const getUserById = async (userId) => {
 const postUser = async (body) => {
   const [result] = await pool.query(
     "INSERT INTO users (name, email) VALUES (?, ?)",
-    [body.name, body.email]
+    [body.name, body.email],
   );
   return { id: result.insertId, name: body.name, email: body.email };
 };
@@ -48,11 +55,19 @@ const putUser = async (userId, body) => {
   if (!body.name || typeof body.name !== "string" || body.name.trim() === "") {
     throw new Error("User name required or invalid");
   }
-  if (!body.email || typeof body.email !== "string" || body.email.trim() === "") {
+  if (
+    !body.email ||
+    typeof body.email !== "string" ||
+    body.email.trim() === ""
+  ) {
     throw new Error("User email required or invalid");
   }
   const user = await getUserById(userId);
-  await pool.query("UPDATE users SET name = ?, email = ? WHERE id = ?", [body.name.trim(), body.email.trim(), userId]);
+  await pool.query("UPDATE users SET name = ?, email = ? WHERE id = ?", [
+    body.name.trim(),
+    body.email.trim(),
+    userId,
+  ]);
   return { ...user, name: body.name.trim(), email: body.email.trim() };
 };
 
@@ -63,4 +78,12 @@ const deleteUser = async (userId) => {
   return user;
 };
 
-module.exports = { getAllUsers, getUserById, getUserStats, postUser, putUser, patchUserStatus, deleteUser };
+module.exports = {
+  getAllUsers,
+  getUserById,
+  getUserStats,
+  postUser,
+  putUser,
+  patchUserStatus,
+  deleteUser,
+};
